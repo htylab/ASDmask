@@ -1,6 +1,8 @@
 FROM neurodebian:xenial-non-free
 MAINTAINER Teng-Yi Huang
 
+# System packages
+RUN apt-get update && apt-get install -y wget
 # install miniconda
 RUN wget -q http://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh
 RUN bash Miniconda3-4.3.31-Linux-x86_64.sh -b -p /usr/local/miniconda
