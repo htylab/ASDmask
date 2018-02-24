@@ -23,7 +23,7 @@ RUN pip install nibabel psutil
 # install FSL
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends fsl-core fsl-atlases fsl-mni152-templates
-
+RUN pip install nilearn
 # setup fsl environment
 ENV FSLDIR=/usr/share/fsl/5.0 \
     FSLOUTPUTTYPE=NIFTI_GZ \
@@ -38,5 +38,6 @@ ENV FSLDIR=/usr/share/fsl/5.0 \
 RUN apt-get clean
 RUN apt-get autoremove -y
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-ENTRYPOINT [""]
+# Setup application
+ADD ./pymars /pymars
+ENTRYPOINT ["bash" ,"-c", "/usr/local/miniconda/python /pymars/mars_run.py"]
