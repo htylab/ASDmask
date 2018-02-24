@@ -40,4 +40,4 @@ RUN apt-get autoremove -y
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 # Setup application
 ADD ./pymars /pymars
-ENTRYPOINT ["bash" ,"-c", "/usr/local/miniconda/python /pymars/mars_run.py"]
+ENTRYPOINT ["bash" ,"-c", "/usr/local/miniconda/bin/python /pymars/mars_run.py"]
