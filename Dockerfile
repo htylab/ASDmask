@@ -17,6 +17,7 @@ ENV PATH=/usr/local/miniconda/bin:$PATH
 RUN conda install -y numpy==1.11 pip python=3.5 scipy matplotlib
 
 # install python dependencies
+RUN apt-get update && apt-get install -y build-essential
 RUN pip install nibabel psutil
 
 # install FSL
