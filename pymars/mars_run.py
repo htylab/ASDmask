@@ -303,7 +303,7 @@ systemx('fsl_glm -i %s -d %s -o %s --out_z=%s -m %s --demean ' % (cleaned_wEPI_f
                                                               rsn10_drz_ff ,
                                                               T1prep_dict['wbmask_ffname']))
 plotrsn10(rsn10_drz_ff, workpath, rsn10_jpg_ff,4)
-
+shutil.copy(rsn10_drz_ff, resultpath)
 # copy the results to resultpath
 if (app_option=='1'):
     shutil.copy(rsn10_dr_ff, resultpath)
