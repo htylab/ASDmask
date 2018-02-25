@@ -11,8 +11,8 @@ from rmap import plotrsn10
 from nilearn.image import smooth_img
 
 app_option = '0'
-workdir = '/workdir'
-resultdir = '/resultdir'
+workpath = '/workdir'
+resultpath = '/resultdir'
 def check_indi(workpath):
     file_dict = {'org_workpath': workpath}
     pathkey = {'anat_': 'T1', 'hires_': 'T1', 'rest_': 'rest',
