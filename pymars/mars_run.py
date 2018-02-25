@@ -1,5 +1,5 @@
 import os
-from os.path import join, isdir, split, dirname, basename, isfile
+from os.path import join, dirname, basename, isfile
 import subprocess
 import nibabel
 import numpy as np
@@ -7,10 +7,12 @@ import logging
 import nilearn
 from nilearn import plotting
 import shutil
-import matplotlib.pyplot as plt
-from rmap import seed_to_voxel_corr, plotrsn10, get_connindex
+from rmap import plotrsn10
+from nilearn.image import smooth_img
 
 app_option = '0'
+workdir = '/workdir'
+resultdir = '/resultdir'
 def check_indi(workpath):
     file_dict = {'org_workpath': workpath}
     pathkey = {'anat_': 'T1', 'hires_': 'T1', 'rest_': 'rest',
@@ -101,12 +103,7 @@ def FSL_T1_prep(mni152_brain_ff, file_dict):
                    'GM_ffname': join(mT1_dir, 'bpmprage_pve_1.nii.gz'),
                    'WM_ffname': join(mT1_dir, 'bpmprage_pve_2.nii.gz'),
                    'CSF_ffname': join(mT1_dir, 'bpmprage_pve_0.nii.gz'), }
-    '''
-    T1prep_dict['wT1_ffname'] =  FSL_norm(T1prep_dict['T1_ffname'],T1prep_dict['str2stand'],mni152_brain_ff)
-    T1prep_dict['wGM_ffname'] = FSL_norm(T1prep_dict['GM_ffname'],T1prep_dict['str2stand'],mni152_brain_ff)
-    T1prep_dict['wWM_ffname'] = FSL_norm(T1prep_dict['WM_ffname'],T1prep_dict['str2stand'],mni152_brain_ff)
-    T1prep_dict['wCSF_ffname'] = FSL_norm(T1prep_dict['CSF_ffname'],T1prep_dict['str2stand'],mni152_brain_ff)
-    '''
+
     T1prep_dict['wT1_ffname'] = FSL_fnirt_applywarp(mni152_brain_ff,
                                                     T1prep_dict['T1_ffname'],
                                                     T1prep_dict['nl_str2stand'])
@@ -141,7 +138,6 @@ def get_friston24(data):
 
 def FSL_EPI_prep(file_dict):
     # motion correction and regressing out motion correction parameters
-    #remove first 8 volumes
 
     # slice timing
     data = nibabel.nifti1.load(file_dict['rest_ffname'])
@@ -220,46 +216,6 @@ def get_confound(epi_ff,cfnmask_ff):
     systemx("rm -r %s" % tsout)
     return ts_to_regress
 
-# regress out WM/CSF
-def regressout_mask(epi_ff, cfnmask_ff):
-    # cfnmask_ff: confound mask
-    # load nifti data
-    # A function modified from Nan-Kuei Chen's script
-    data = nibabel.nifti1.load(epi_ff)
-    epi_vol = data.get_data()
-
-    tsout = join(dirname(epi_ff), "ts.txt")
-    systemx("fslmeants -i %s -m %s -o %s" % (epi_ff, cfnmask_ff, tsout))
-    ts_to_regress = np.loadtxt(tsout, unpack=True)
-    tdim = epi_vol.shape[3]
-    zdim = epi_vol.shape[2]
-    systemx("rm -r %s" % tsout)
-
-    X_confound = np.vstack([np.ones(tdim), ts_to_regress]).T
-
-    logging.info('starting linear regression')
-    tmp_mean = np.mean(epi_vol, axis=3)
-    shape = epi_vol.shape
-    data1v = epi_vol.reshape((shape[0]*shape[1], shape[2], shape[3])).transpose((1, 2, 0))
-    # data1v is a view in z, t, x*y order
-    # go slice-by-slice
-    for cntz in range(zdim):
-        tmp_data = data1v[cntz]
-        # regress wm
-        p01 = np.linalg.lstsq(X_confound, tmp_data)[0]
-        p001 = np.dot(X_confound, p01)  # product
-        tmp02 = tmp_data - p001
-
-    data_mr = data1v.transpose((2, 0, 1)).reshape(shape)
-    del data1v
-    del epi_vol
-    data_mr = data_mr + tmp_mean.reshape(tmp_mean.shape + (1,))
-    data_mr -= np.min(data_mr)
-    data_mr *= 30000.0 / np.max(data_mr)
-    newNii = nibabel.Nifti1Pair(data_mr, None, data.get_header())
-    nibabel.save(newNii, epi_ff)
-
-
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(message)s',
                     datefmt='%m/%d %I:%M')
@@ -311,8 +267,6 @@ np.savetxt(confound_GSR_ff, confounds,
 # -nosearch -applyisoxfm 4
 #fsl_glm -i wrsrest.nii.gz -d rsn10_0001.nii.gz -o test2.txt --demean
 
-#regressout_mask(wEPI_ff, T1prep_dict['wWM_ffname'])
-#regressout_mask(wEPI_ff, T1prep_dict['wCSF_ffname'])
 if (app_option=='1'):
     #shutil.copy(wEPI_ff, resultpath)
     systemx('flirt -in %s -ref %s -out %s -nosearch -applyisoxfm 3' % (wEPI_ff, wEPI_ff, join(resultpath,'EPI_MNI3mm.nii.gz')))
@@ -335,7 +289,7 @@ safe_mkdir(RSN10dir)
 
 shutil.copy(join(app_dir,'atlas','RSN10.jpg'), RSN10dir)
 #dual regression
-from nilearn.image import load_img, smooth_img
+
 
 cleaned_wEPI_ff = join(workpath,'clean_wEPI.nii.gz')
 nilearn.image.clean_img(smooth_img(wEPI_ff, 6), detrend=True, confounds=[confound_ff]).to_filename(cleaned_wEPI_ff)
