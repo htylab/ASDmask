@@ -11,7 +11,7 @@ RUN bash Miniconda3-4.3.31-Linux-x86_64.sh -b -p /usr/local/miniconda
 RUN rm Miniconda3-4.3.31-Linux-x86_64.sh
 
 # update path to include conda
-ENV PATH=/usr/local/miniconda/bin:$PATH
+ENV PATH=$PATH:/usr/local/miniconda/bin
 
 # install conda dependencies
 RUN conda install -y numpy==1.11 pip python=3.5 scipy matplotlib
