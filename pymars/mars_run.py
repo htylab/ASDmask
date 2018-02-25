@@ -8,7 +8,7 @@ import nilearn
 from nilearn import plotting
 import shutil
 from rmap import plotrsn10
-from nilearn.image import smooth_img
+from nilearn.image import smooth_img, high_variance_confounds
 
 app_option = '0'
 workpath = '/workdir'
@@ -145,7 +145,8 @@ def FSL_EPI_prep(file_dict):
     TR = data.get_header().get_zooms()[3]
     mrest_dir = join(file_dict['org_workpath'], 'mrest')
     safe_mkdir(mrest_dir)
-    systemx('fslroi %s %s 8 -1' % (file_dict['rest_ffname'],join(mrest_dir, 'rest.nii.gz')))
+    systemx('fslroi %s %s 8 -1' % (file_dict['rest_ffname'],
+                                   join(mrest_dir, 'rest.nii.gz')))
     systemx('slicetimer -i %s --out=%s -r %d --odd' %
             (join(mrest_dir, 'rest.nii.gz'),
              join(mrest_dir, 'srest.nii.gz'),
@@ -244,7 +245,9 @@ csf_ts = get_confound(wEPI_ff, T1prep_dict['wCSF_ffname'])
 gb_ts = get_confound(wEPI_ff, T1prep_dict['wbmask_ffname'])
 constant_ts = np.ones(wm_ts.size)
 linear_ts = np.arange(0.0,wm_ts.size)
-compcor5 = nilearn.image.high_variance_confounds(wEPI_ff, n_confounds=5,mask_img=T1prep_dict['wWMCSF_ffname'])
+compcor5 = high_variance_confounds(wEPI_ff,
+                                   n_confounds=5,
+                                   mask_img=T1prep_dict['wWMCSF_ffname'])
 
 
 confound_ff = join(resultpath, 'confound.csv')
@@ -268,27 +271,19 @@ np.savetxt(confound_GSR_ff, confounds,
 # -nosearch -applyisoxfm 4
 #fsl_glm -i wrsrest.nii.gz -d rsn10_0001.nii.gz -o test2.txt --demean
 
-if (app_option=='1'):
-    #shutil.copy(wEPI_ff, resultpath)
-    systemx('flirt -in %s -ref %s -out %s -nosearch -applyisoxfm 3' % (wEPI_ff, wEPI_ff, join(resultpath,'EPI_MNI3mm.nii.gz')))
-    shutil.copy(T1prep_dict['wWM_ffname'], join(resultpath,'WM_2mm.nii.gz'))
-    shutil.copy(T1prep_dict['wCSF_ffname'], join(resultpath,'CSF_2mm.nii.gz'))
-    shutil.copy(T1prep_dict['wGM_ffname'], join(resultpath,'GM_2mm.nii.gz'))
-#nii3d_to_jpg(T1prep_dict['T1_ffname'], join(resultpath, 'Original_T1.jpg'))
-nii3d_to_jpg(T1prep_dict['T1bet_ffname'],
-             join(resultpath, 'Original_T1brain.jpg'))
-#nii3d_to_jpg(T1prep_dict['wT1_ffname'], join(resultpath, 'normalized_T1.jpg'))
+
+
 # extract first point to save jpg
 wEPI3d_ff = join(dirname(wEPI_ff), '3d'+basename(wEPI_ff))
 systemx('fslroi %s %s 0 1' % (wEPI_ff, wEPI3d_ff))
-nii3d_to_jpg(wEPI3d_ff, join(resultpath, 'normalized_EPI.jpg'))
 
 
 
-RSN10dir = join(resultpath,'RSN10')
+
+RSN10dir = join(workpath,'RSN10')
 safe_mkdir(RSN10dir)
 
-shutil.copy(join(app_dir,'atlas','RSN10.jpg'), RSN10dir)
+#shutil.copy(join(app_dir,'atlas','RSN10.jpg'), RSN10dir)
 #dual regression
 
 
@@ -297,6 +292,7 @@ nilearn.image.clean_img(smooth_img(wEPI_ff, 6), detrend=True, confounds=[confoun
 
 rsn10_dr_ff = join(RSN10dir, 'rsn10_dr.nii.gz')
 rsn10_drz_ff = join(RSN10dir, 'rsn10_drzstat.nii.gz')
+rsn10_jpg_ff = join(RSN10dir, 'RSN10DR_dualregress_ztest.jpg')
 systemx('fsl_glm -i %s -d %s -o %s -m %s --demean' % (cleaned_wEPI_ff,
                                                 join(app_dir,'atlas','PNAS_Smith09_rsn10.nii.gz'),
                                                 join(RSN10dir, 'RSN10_step1.txt'),
@@ -306,13 +302,23 @@ systemx('fsl_glm -i %s -d %s -o %s --out_z=%s -m %s --demean ' % (cleaned_wEPI_f
                                                               rsn10_dr_ff,
                                                               rsn10_drz_ff ,
                                                               T1prep_dict['wbmask_ffname']))
-plotrsn10(rsn10_drz_ff, workpath, join(RSN10dir, 'RSN10DR_dualregress_ztest.jpg'),4)
+plotrsn10(rsn10_drz_ff, workpath, rsn10_jpg_ff,4)
 
-
-shutil.copy(T1prep_dict['wbmask_ffname'], join(resultpath,'brainmask.nii.gz'))
-
+# copy the results to resultpath
+if (app_option=='1'):
+    shutil.copy(rsn10_dr_ff, resultpath)
+    shutil.copy(rsn10_jpg_ff, resultpath)
+    systemx('flirt -in %s -ref %s -out %s -nosearch -applyisoxfm 3' % (wEPI_ff, wEPI_ff, join(resultpath,'EPI_MNI3mm.nii.gz')))
+    shutil.copy(T1prep_dict['wWM_ffname'], join(resultpath,'WM_2mm.nii.gz'))
+    shutil.copy(T1prep_dict['wCSF_ffname'], join(resultpath,'CSF_2mm.nii.gz'))
+    shutil.copy(T1prep_dict['wGM_ffname'], join(resultpath,'GM_2mm.nii.gz'))
+    shutil.copy(T1prep_dict['wbmask_ffname'], join(resultpath,'brainmask.nii.gz'))
+    nii3d_to_jpg(T1prep_dict['T1_ffname'], join(resultpath, 'Original_T1.jpg'))
+    nii3d_to_jpg(T1prep_dict['T1bet_ffname'],
+                 join(resultpath, 'Original_T1brain.jpg'))
+    nii3d_to_jpg(T1prep_dict['wT1_ffname'], join(resultpath, 'normalized_T1.jpg'))
+    nii3d_to_jpg(wEPI3d_ff, join(resultpath, 'normalized_EPI.jpg'))
 os.remove(wEPI_ff)
-
 
 systemx('date > %s' % join(resultpath, 'MRAPP.DONE'))
 logging.info('Finshed!!')
