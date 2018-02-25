@@ -10,7 +10,7 @@ import shutil
 import matplotlib.pyplot as plt
 from rmap import seed_to_voxel_corr, plotrsn10, plotrsn10from20, get_connindex
 
-
+app_option=='0'
 def check_indi(workpath):
     file_dict = {'org_workpath': workpath}
     pathkey = {'anat_': 'T1', 'hires_': 'T1', 'rest_': 'rest',
