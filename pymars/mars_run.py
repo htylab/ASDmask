@@ -56,6 +56,7 @@ def systemx(cmd, display=True):
 
 
 def nii3d_to_jpg(nii_ff, output_ff=''):
+    return
     if output_ff == '':
         output_ff = nii_ff + '.jpg'
     if not isfile(nii_ff):
