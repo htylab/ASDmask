@@ -26,10 +26,10 @@ ENV FSLDIR=/usr/share/fsl/5.0
 ENV FSLOUTPUTTYPE=NIFTI_GZ
 #FSLMULTIFILEQUIT=TRUE \
 #    POSSUMDIR=/usr/share/fsl/5.0 \
-#    LD_LIBRARY_PATH=/usr/lib/fsl/5.0:$LD_LIBRARY_PATH \
+ENV LD_LIBRARY_PATH=/usr/lib/fsl/5.0:$LD_LIBRARY_PATH \
 #    FSLTCLSH=/usr/bin/tclsh \
 #    FSLWISH=/usr/bin/wish \
-ENV    PATH=/usr/lib/fsl/5.0:$PATH
+ENV PATH=/usr/lib/fsl/5.0:$PATH
 
 # clean up
 RUN apt-get clean
