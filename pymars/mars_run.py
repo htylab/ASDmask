@@ -250,8 +250,8 @@ compcor5 = high_variance_confounds(wEPI_ff,
                                    mask_img=T1prep_dict['wWMCSF_ffname'])
 
 
-confound_ff = join(resultpath, 'confound.csv')
-confound_GSR_ff = join(resultpath, 'csf_wm_global.csv')
+confound_ff = join(workpath, 'confound.csv')
+confound_GSR_ff = join(workpath, 'csf_wm_global.csv')
 fristonstr=''
 for ii in range(24):fristonstr+='f%s ' % (ii+1)
 
