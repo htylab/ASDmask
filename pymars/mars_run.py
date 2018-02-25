@@ -255,10 +255,10 @@ confound_GSR_ff = join(workpath, 'csf_wm_global.csv')
 fristonstr=''
 for ii in range(24):fristonstr+='f%s ' % (ii+1)
 
-confounds = np.hstack([np.array([csf_ts,constant_ts, linear_ts, linear_ts**2]).T,
+confounds = np.hstack([np.array([csf_ts, wm_ts, constant_ts, linear_ts, linear_ts**2]).T,
                       friston24, compcor5])
 np.savetxt(confound_ff, confounds,
-           header='csf constant linear quadratic ' + fristonstr + 'compcor1 compcor2 compcor3 compcor4 compcor5',
+           header='csf wm constant linear quadratic ' + fristonstr + 'compcor1 compcor2 compcor3 compcor4 compcor5',
            comments='',fmt='%.10f')
 confounds = np.hstack([np.array([csf_ts, wm_ts,gb_ts,constant_ts, linear_ts, linear_ts**2]).T,
                       friston24, compcor5])
