@@ -8,7 +8,7 @@ import nilearn
 from nilearn import plotting
 import shutil
 import matplotlib.pyplot as plt
-from rmap import seed_to_voxel_corr, plotrsn10, plotrsn10from20, get_connindex
+from rmap import seed_to_voxel_corr, plotrsn10, get_connindex
 
 app_option = '0'
 def check_indi(workpath):
@@ -329,15 +329,9 @@ systemx('fslroi %s %s 0 1' % (wEPI_ff, wEPI3d_ff))
 nii3d_to_jpg(wEPI3d_ff, join(resultpath, 'normalized_EPI.jpg'))
 
 
-#seed-based correlation
-frois = ['rsn10_1', 'rsn10_2', 'rsn10_3', 'rsn10_4', 'rsn10_5',
-         'rsn10_6', 'rsn10_7', 'rsn10_8', 'rsn10_9', 'rsn10_10']
 
 RSN10dir = join(resultpath,'RSN10')
 safe_mkdir(RSN10dir)
-rmaps_ff=[]
-DMN_ff = seed_to_voxel_corr(wEPI_ff, confound_ff, resultpath,
-                            mask_img=T1prep_dict['wbmask_ffname'])
 
 shutil.copy(join(app_dir,'atlas','RSN10.jpg'), RSN10dir)
 #dual regression
@@ -361,11 +355,6 @@ plotrsn10(rsn10_drz_ff, workpath, join(RSN10dir, 'RSN10DR_dualregress_ztest.jpg'
 
 
 shutil.copy(T1prep_dict['wbmask_ffname'], join(resultpath,'brainmask.nii.gz'))
-
-#connectome
-from connectome import cal_connectome, get_all_connectome
-#connAAL = cal_connectome(wEPI_ff, confound_ff, join(app_dir,'atlas','AAL.nii'),
-#                         join(resultpath,'conn_AAL90.jpg'), np.arange(90))
 
 os.remove(wEPI_ff)
 

@@ -38,6 +38,8 @@ ENV FSLDIR=/usr/share/fsl/5.0 \
 RUN apt-get clean
 RUN apt-get autoremove -y
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN conda install -y pillow
 # Setup application
 ADD ./pymars /pymars
 ENTRYPOINT ["bash" ,"-c", "/usr/local/miniconda/bin/python /pymars/mars_run.py"]
